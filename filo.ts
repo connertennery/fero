@@ -1,14 +1,17 @@
-const fs = require('fs');
-const url = require('url');
+import * as url from 'url';
+import * as fs from 'fs'
 
 import { meta } from './main';
 import { trimChar } from './util'
+import { MakeDirectoryOptions } from 'fs';
 
-const createDirectory = async (dir: string) => {
+const createDirectory = async (dir: fs.PathLike) => {
 	try {
 		console.log(`mkdir: ${dir}`);
-		const options = { recursive: true };
-		await fs.mkdir(dir, options, (err: Error) => {
+		const options: MakeDirectoryOptions = {
+			recursive: true,
+		};
+		fs.mkdir(dir, options, (err: any) => {
 			if (err) throw err;
 		});
 	}
@@ -19,7 +22,9 @@ const createDirectory = async (dir: string) => {
 
 const writeFile = async (filePath: string, content: string) => {
 	console.log(`wf: ${filePath}`);
-	fs.writeFile(filePath, content);
+	fs.writeFile(filePath, content, (err: any) => {
+		if (err) throw err;
+	});
 }
 
 const createPaths = async (url: URL) => {
