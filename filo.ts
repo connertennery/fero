@@ -1,41 +1,36 @@
-import * as url from 'url';
 import * as fs from 'fs'
 
 import { meta } from './main';
-import { trimChar } from './util'
 import { MakeDirectoryOptions } from 'fs';
 
-const createDirectory = async (dir: fs.PathLike) => {
-	try {
-		console.log(`mkdir: ${dir}`);
+const createDirectory = async (dir: string): Promise<void> => {
+	return new Promise((resolve, reject) => {
 		const options: MakeDirectoryOptions = {
 			recursive: true,
 		};
 		fs.mkdir(dir, options, (err: any) => {
-			if (err) throw err;
+			if (err) reject();
+			resolve();
 		});
-	}
-	catch (err) {
-		console.error(err);
-	}
+	})
 }
 
 const writeFile = async (filePath: string, content: string) => {
-	console.log(`wf: ${filePath}`);
 	fs.writeFile(filePath, content, (err: any) => {
 		if (err) throw err;
 	});
 }
 
-const createPaths = async (url: URL) => {
-	const base = url.pathname !== '/' ? trimChar(url.pathname, '/') : 'root';
-	const dir = `${meta.baseDir}\/${url.hostname}\/${base}`;
-	const file = `${dir}\/${url.pathname.substring(url.pathname.lastIndexOf('\/') + 1)}.md`
+const createPaths = async (url: URL): Promise<{ base: string, dir: string, file: string }> => {
+	//TODO Minor cleanup
+	const base = url.href.substring(url.protocol.length + 2, url.href.lastIndexOf('/')) //
+	const dir = `${meta.baseDir}\/${base}`
+	const file = `${dir}\/${url.href.substring(url.href.lastIndexOf('/') + 1)}.md`
+
 	return { base, dir, file }
 }
 
 export const createPage = async (url: URL, content: string) => {
 	const paths = await createPaths(url);
-	await createDirectory(paths.dir);
-	writeFile(paths.file, content)
+	createDirectory(paths.dir).then(() => writeFile(paths.file, content));
 }
