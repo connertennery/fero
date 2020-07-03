@@ -5,27 +5,29 @@ import * as cheerio from 'cheerio';
 
 import { meta } from './main';
 
-
-export const getPage = (url: URL) => {
-	let get = https.get(url.href, (res: any) => {
-		let chonk: string = '';
-		res.setEncoding('utf8');
-		res.on('data', (chunk: string) => {
-			chonk += chunk;
+export const getPage = async (url: URL): Promise<{ url: URL, source: string }> => {
+	return new Promise((resolve, reject) => {
+		const get = https.get(url.href, (res: any) => {
+			let chonk = '';
+			res.setEncoding('utf8');
+			res.on('data', (chunk: string) => {
+				chonk += chunk;
+			});
+			res.on('end', () => {
+				const parsed = cheerio.load(chonk);
+				scrubAttributes(parsed('body')[0]);
+				resolve({
+					url: url,
+					source: parsed('body').html() ?? 'source not found'
+				});
+			});
+		})
+		get.on('error', (e: Error) => {
+			console.error(e.message);
+			reject(e.message);
 		});
-		res.on('end', () => {
-			const parsed = cheerio.load(chonk);
-			scrubAttributes(parsed('body')[0]);
-		});
-	})
-	get.on('error', (e: any) => {
-		console.error(e);
 	});
-
 };
-
-
-
 
 const regexNodeValue = /\s{2,}/gm;
 const scrubAttributes = (node: CheerioElement) => {
