@@ -1,4 +1,4 @@
-import { getPage } from './duck'
+import { crawl } from './duck'
 import { createPage } from './filo';
 import { trimChar } from './util';
 
@@ -7,6 +7,9 @@ export const meta = {
 	url: new URL('https://www.pcgamer.com/space-odyssey-our-first-big-look-at-kerbal-space-program-2/'),
 	allowedAttribs: ['href']
 }
+
+const sites: Set<string> = new Set();
+
 
 //Sample urls
 const urls: string[] = [
@@ -19,7 +22,7 @@ const urls: string[] = [
 
 urls.forEach(url => {
 	let curl = new URL(trimChar(url, '/'));
-	getPage(curl).then((capture: { url: URL, source: string }) => {
+	crawl(curl).then((capture: { url: URL, source: string, links: Set<string> }) => {
 		createPage(capture.url, capture.source);
 	});
 });

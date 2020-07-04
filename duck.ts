@@ -1,11 +1,21 @@
-// const https = require('https');
-// const cheerio = require('cheerio');
 import * as https from 'https';
 import * as cheerio from 'cheerio';
 
 import { meta } from './main';
 
-export const getPage = async (url: URL): Promise<{ url: URL, source: string }> => {
+//* Done
+export const crawl = async (url: URL, depth?: number): Promise<{ url: URL, source: string, links: Set<string> }> => {
+	if (depth === undefined) depth = 0;
+
+	const parsed: CheerioStatic = await getPage(url);
+	const links: Set<string> = await scrapeLinks(parsed);
+	const source = parsed('body').html() ?? 'source not found';
+
+	return { url: url, source: source, links: links };
+}
+
+//* Done
+export const getPage = async (url: URL): Promise<CheerioStatic> => {
 	return new Promise((resolve, reject) => {
 		const get = https.get(url.href, (res: any) => {
 			let chonk = '';
@@ -16,10 +26,7 @@ export const getPage = async (url: URL): Promise<{ url: URL, source: string }> =
 			res.on('end', () => {
 				const parsed = cheerio.load(chonk);
 				scrubAttributes(parsed('body')[0]);
-				resolve({
-					url: url,
-					source: parsed('body').html() ?? 'source not found'
-				});
+				resolve(parsed);
 			});
 		})
 		get.on('error', (e: Error) => {
@@ -29,6 +36,7 @@ export const getPage = async (url: URL): Promise<{ url: URL, source: string }> =
 	});
 };
 
+//* Done
 const regexNodeValue = /\s{2,}/gm;
 const scrubAttributes = (node: CheerioElement) => {
 	if (typeof node.nodeValue === 'string') {
@@ -62,4 +70,14 @@ const scrubAttributes = (node: CheerioElement) => {
 		else if (typeof child.nodeValue === 'string')
 			child.nodeValue = child.nodeValue.replace(regexNodeValue, ' ');
 	}
+}
+
+//* Done
+const scrapeLinks = async (html: CheerioStatic): Promise<Set<string>> => {
+	const links: Set<string> = new Set();
+	html('a').each((index: number, element: CheerioElement) => {
+		links.add(cheerio(element).attr('href') ?? '');
+	});
+	links.delete('');
+	return links;
 }
