@@ -3,7 +3,11 @@ import * as cheerio from 'cheerio';
 
 import { meta } from './main';
 
-//* Done
+/**
+ * Crawls a webpage and its links
+ * @param url - URL target
+ * @param depth - Depth to crawl away from the url
+ */
 export const crawl = async (url: URL, depth?: number): Promise<{ url: URL, source: string, links: Set<string> }> => {
 	if (depth === undefined) depth = 0;
 
@@ -14,7 +18,10 @@ export const crawl = async (url: URL, depth?: number): Promise<{ url: URL, sourc
 	return { url: url, source: source, links: links };
 }
 
-//* Done
+/**
+ * Downloads then scrubs the source of the given url
+ * @param url - URL target
+ */
 export const getPage = async (url: URL): Promise<CheerioStatic> => {
 	return new Promise((resolve, reject) => {
 		const get = https.get(url.href, (res: any) => {
@@ -36,9 +43,12 @@ export const getPage = async (url: URL): Promise<CheerioStatic> => {
 	});
 };
 
-//* Done
-const regexNodeValue = /\s{2,}/gm;
+/**
+ * Recursively removes all attributes that are not in meta.allowedAttributes[] from every tag in the element and its siblings and children.
+ * @param node Root CheerioElement to be scrubbed
+ */
 const scrubAttributes = (node: CheerioElement) => {
+	const regexNodeValue = /\s{2,}/gm;
 	if (typeof node.nodeValue === 'string') {
 		node.nodeValue = node.nodeValue.trim();
 		node.nodeValue = node.nodeValue.replace(regexNodeValue, '');
@@ -72,7 +82,10 @@ const scrubAttributes = (node: CheerioElement) => {
 	}
 }
 
-//* Done
+/**
+ * Returns all of the unique <a> links in the given node and its children
+ * @param html
+ */
 const scrapeLinks = async (html: CheerioStatic): Promise<Set<string>> => {
 	const links: Set<string> = new Set();
 	html('a').each((index: number, element: CheerioElement) => {
